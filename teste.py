@@ -30,18 +30,18 @@ df['DATA_BAIXA'] = pd.to_datetime(df['DATA_BAIXA'], dayfirst=True, errors='coerc
 # Remover registros inválidos
 df = df[df['DATA_HORA_INCL'].notna() & df['DATA_BAIXA'].notna()]
 
-# Filtro de mês (setembro/2025)
+# --- Filtro para setembro/2025 (top 10 atual) ---
 data_inicio = pd.to_datetime('2025-09-01')
 data_fim = pd.to_datetime('2025-09-30')
-df = df[(df['DATA_BAIXA'] >= data_inicio) & (df['DATA_BAIXA'] <= data_fim)]
+df_setembro = df[(df['DATA_BAIXA'] >= data_inicio) & (df['DATA_BAIXA'] <= data_fim)]
 
 # Excluir registros de ENGENHARIA e sem datas de execução
-df = df[(df['AREA_EXEC'] != 'ENGENHARIA') & (df['Área Exec.'] != 'ENGENHARIA')]
-df = df[df['DH_EXEC_INI_REL'].notna() & df['DH_EXEC_FIM_REL'].notna()]
+df_setembro = df_setembro[(df_setembro['AREA_EXEC'] != 'ENGENHARIA') & (df_setembro['Área Exec.'] != 'ENGENHARIA')]
+df_setembro = df_setembro[df_setembro['DH_EXEC_INI_REL'].notna() & df_setembro['DH_EXEC_FIM_REL'].notna()]
 
 # Calcular DiasDeExec (como DATEDIFF DAY no DAX)
-df['DiasDeExec'] = (df['DATA_BAIXA'] - df['DATA_HORA_INCL']).dt.total_seconds() / (24 * 3600)
-df['DiasDeExec'] = df['DiasDeExec'].apply(lambda x: math.ceil(x))
+df_setembro['DiasDeExec'] = (df_setembro['DATA_BAIXA'] - df_setembro['DATA_HORA_INCL']).dt.total_seconds() / (24 * 3600)
+df_setembro['DiasDeExec'] = df_setembro['DiasDeExec'].apply(lambda x: math.ceil(x))
 
 # Dicionário (Serviço, Empresa) -> PrazoPadrao
 prazo_dict = df_servicos.drop_duplicates(subset=['Serviços', 'Concessionária']) \
@@ -61,11 +61,11 @@ def calcular_prazo_dax(row):
             return None
 
 # Aplicar PrazoPadrao
-df['PrazoPadrao'] = df.apply(calcular_prazo_dax, axis=1)
-df = df[df['PrazoPadrao'].notna()]
+df_setembro['PrazoPadrao'] = df_setembro.apply(calcular_prazo_dax, axis=1)
+df_setembro = df_setembro[df_setembro['PrazoPadrao'].notna()]
 
 # Criar StatusPrazo
-df['StatusPrazo'] = df.apply(
+df_setembro['StatusPrazo'] = df_setembro.apply(
     lambda x: 'No Prazo' if x['DiasDeExec'] <= x['PrazoPadrao'] else 'Fora do Prazo',
     axis=1
 )
@@ -87,9 +87,9 @@ concessionarias = [
     #'RIOMAIS'
 ]
 
-# Loop por concessionária
+# --- Loop por concessionária para top 10 do mês (igual código atual) ---
 for conc in concessionarias:
-    df_conc = df[df['EMPRESA'] == conc]
+    df_conc = df_setembro[df_setembro['EMPRESA'] == conc]
 
     total_os = len(df_conc)
     no_prazo = len(df_conc[df_conc['StatusPrazo'] == 'No Prazo'])
@@ -119,3 +119,49 @@ for conc in concessionarias:
 
     print("\nTop 10 piores serviços (% no prazo mais baixo):")
     print(top10.to_string(index=False))
+
+
+# --- NOVO: Top 3 últimos 3 meses ---
+# Filtrar últimos 3 meses (julho a setembro/2025)
+data_inicio_3mes = pd.to_datetime('2025-07-01')
+data_fim_3mes = pd.to_datetime('2025-09-30')
+df_3meses = df[(df['DATA_BAIXA'] >= data_inicio_3mes) & (df['DATA_BAIXA'] <= data_fim_3mes)]
+
+# Excluir registros de ENGENHARIA e sem datas de execução
+df_3meses = df_3meses[(df_3meses['AREA_EXEC'] != 'ENGENHARIA') & (df_3meses['Área Exec.'] != 'ENGENHARIA')]
+df_3meses = df_3meses[df_3meses['DH_EXEC_INI_REL'].notna() & df_3meses['DH_EXEC_FIM_REL'].notna()]
+
+# Calcular DiasDeExec
+df_3meses['DiasDeExec'] = (df_3meses['DATA_BAIXA'] - df_3meses['DATA_HORA_INCL']).dt.total_seconds() / (24 * 3600)
+df_3meses['DiasDeExec'] = df_3meses['DiasDeExec'].apply(lambda x: math.ceil(x))
+
+# Aplicar PrazoPadrao e StatusPrazo
+df_3meses['PrazoPadrao'] = df_3meses.apply(calcular_prazo_dax, axis=1)
+df_3meses = df_3meses[df_3meses['PrazoPadrao'].notna()]
+df_3meses['StatusPrazo'] = df_3meses.apply(
+    lambda x: 'No Prazo' if x['DiasDeExec'] <= x['PrazoPadrao'] else 'Fora do Prazo',
+    axis=1
+)
+
+# Loop por concessionária para top 3 últimos 3 meses
+for conc in concessionarias:
+    df_conc_3mes = df_3meses[df_3meses['EMPRESA'] == conc]
+
+    resumo_3mes = df_conc_3mes.groupby('Servico_Limpo').agg(
+        Qtde_OS=('Nº O.S.', 'count'),
+        Prazo_Padrao=('PrazoPadrao', 'mean'),
+        Media_Execucao=('DiasDeExec', 'mean'),
+        Diferença=('DiasDeExec', lambda x: x.mean() - df_conc_3mes.loc[x.index, 'PrazoPadrao'].mean()),
+        No_Prazo=('StatusPrazo', lambda x: (x=='No Prazo').sum())
+    ).reset_index()
+
+    # Filtrar serviços com 10 ou mais OS
+    resumo_3mes = resumo_3mes[resumo_3mes['Qtde_OS'] >= 10]
+
+    resumo_3mes['%_No_Prazo'] = round((resumo_3mes['No_Prazo'] / resumo_3mes['Qtde_OS']) * 100, 2)
+
+    top3_3mes = resumo_3mes.sort_values('%_No_Prazo').head(3)
+    top3_3mes = top3_3mes[['Servico_Limpo','Qtde_OS','Prazo_Padrao','Media_Execucao','Diferença','%_No_Prazo']]
+
+    print(f"\nTop 3 piores serviços últimos 3 meses ({conc}) - apenas serviços com >=10 OS:")
+    print(top3_3mes.to_string(index=False))
