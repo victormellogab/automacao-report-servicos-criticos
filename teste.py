@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import math
+import matplotlib.pyplot as plt
 
 # Caminhos dos arquivos
 caminho_inova = r"C:\Users\victor.mello\OneDrive - Grupo Aguas do Brasil\Área de Trabalho\Script Geração Report Serviços\Dados\data.xlsx"
@@ -165,3 +166,82 @@ for conc in concessionarias:
 
     print(f"\nTop 3 piores serviços últimos 3 meses ({conc}) - apenas serviços com >=10 OS:")
     print(top3_3mes.to_string(index=False))
+
+# Loop por concessionária
+for conc in concessionarias:
+
+    df_conc = df[(df['EMPRESA'] == conc) &
+                 (df['DATA_BAIXA'] >= pd.to_datetime('2025-04-01')) &
+                 (df['DATA_BAIXA'] <= pd.to_datetime('2025-09-30'))]
+
+    # Excluir ENGENHARIA e só considerar serviços com tempo de execução
+    df_conc = df_conc[(df_conc['AREA_EXEC'] != 'ENGENHARIA') & (df_conc['Área Exec.'] != 'ENGENHARIA')]
+    df_conc = df_conc[df_conc['DH_EXEC_INI_REL'].notna() & df_conc['DH_EXEC_FIM_REL'].notna()]
+
+    # Calcular DiasDeExec
+    df_conc['DiasDeExec'] = (df_conc['DATA_BAIXA'] - df_conc['DATA_HORA_INCL']).dt.total_seconds() / (24 * 3600)
+    df_conc['DiasDeExec'] = df_conc['DiasDeExec'].apply(lambda x: math.ceil(x))
+
+    # Aplicar PrazoPadrao e StatusPrazo
+    df_conc['PrazoPadrao'] = df_conc.apply(calcular_prazo_dax, axis=1)
+    df_conc = df_conc[df_conc['PrazoPadrao'].notna()]
+
+    df_conc['StatusPrazo'] = df_conc.apply(
+        lambda x: 'No Prazo' if x['DiasDeExec'] <= x['PrazoPadrao'] else 'Fora do Prazo',
+        axis=1
+    )
+
+    # Criar coluna de mês
+    df_conc['Mes'] = df_conc['DATA_BAIXA'].dt.to_period('M').dt.to_timestamp()
+
+    # Agrupar por mês
+    resumo_conc = df_conc.groupby('Mes').agg(
+        Qtde_OS=('Nº O.S.', 'count'),
+        No_Prazo=('StatusPrazo', lambda x: (x == 'No Prazo').sum())
+    ).reset_index()
+
+    resumo_conc['%_No_Prazo'] = round((resumo_conc['No_Prazo'] / resumo_conc['Qtde_OS']) * 100, 2)
+
+    # Ordenar por mês
+    resumo_conc = resumo_conc.sort_values('Mes')
+
+    # Preparar dados para gráfico
+    meses = resumo_conc['Mes'].dt.strftime('%b/%Y')
+    qtde_os = resumo_conc['Qtde_OS']
+    pct_no_prazo = resumo_conc['%_No_Prazo']
+
+    # --- Criar gráfico ---
+    fig, ax1 = plt.subplots(figsize=(10, 5))
+
+    # Barras = quantidade de OS
+    bars = ax1.bar(meses, qtde_os, label='Quantidade de OS', color='skyblue')
+    ax1.set_xlabel('Mês')
+    ax1.tick_params(axis='x', rotation=45)
+    ax1.set_yticks([])  # remove ticks do eixo Y
+
+    # Adicionar os valores acima das barras
+    for bar in bars:
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2, height + 3,
+                 f'{int(height)}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+    # Linha = % no prazo
+    ax2 = ax1.twinx()
+    ax2.plot(meses, pct_no_prazo, marker='o', color='orange', linewidth=2, label='% No Prazo')
+    ax2.set_yticks([])  # remove ticks do eixo Y
+
+    # Adicionar valores da linha (% no prazo) acima dos pontos
+    for i, pct in enumerate(pct_no_prazo):
+        ax2.text(i, pct + 1.5, f'{pct}%', ha='center', va='bottom', fontsize=10, fontweight='bold', color='orange')
+
+    # Título
+    plt.title(f'{conc} — Evolução Mensal (Abr → Set 2025)\nQtde de Serviços x % No Prazo')
+
+    fig.tight_layout()
+
+    # Salvar gráfico
+    caminho_grafico = os.path.join(pasta_saida, f'{conc}_Evolucao_Abr-Set_2025.png')
+    plt.savefig(caminho_grafico, dpi=300)
+    plt.close()
+
+    print(f"\n✅ Gráfico {conc} salvo em: {caminho_grafico}")
