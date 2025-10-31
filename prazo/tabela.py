@@ -1,9 +1,7 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.table import Table
+import plotly.graph_objects as go
 
 def salvar_tabela_img(df, caminho_arquivo):
-    # Renomeia colunas conforme especificação
+    # Renomear colunas
     df = df.rename(columns={
         df.columns[0]: "Serviços",
         df.columns[1]: "Qtde de OS (Geral)",
@@ -13,44 +11,78 @@ def salvar_tabela_img(df, caminho_arquivo):
         df.columns[5]: "% OS no Prazo Padrão"
     })
 
-    # Formatação dos valores
-    df_formatado = df.copy()
-    df_formatado["Qtde de OS (Geral)"] = df_formatado["Qtde de OS (Geral)"].apply(lambda x: f"{x:,.0f}".replace(",", "."))
-    for col in [
-        "Prazo Padrão (Dias)", 
-        "Média Execução (Dias)", 
-        "Diferença (Dias)"
-    ]:
-        df_formatado[col] = df_formatado[col].apply(lambda x: f"{x:.2f}".replace(".", ","))
+    # Formatar dados
+    df_format = df.copy()
+    df_format["Qtde de OS (Geral)"] = df_format["Qtde de OS (Geral)"].apply(lambda x: f"{x:,.0f}".replace(",", "."))
+    for col in ["Prazo Padrão (Dias)", "Média Execução (Dias)", "Diferença (Dias)"]:
+        df_format[col] = df_format[col].apply(lambda x: f"{x:.2f}".replace(".", ","))
+    df_format["% OS no Prazo Padrão"] = df_format["% OS no Prazo Padrão"].apply(lambda x: f"{x:.2f}%".replace(".", ","))
 
-    df_formatado["% OS no Prazo Padrão"] = df_formatado["% OS no Prazo Padrão"].apply(lambda x: f"{x:.2f}%".replace(".", ","))
+    # Cores Diferença
+    cores_diferenca = []
+    for val in df[df.columns[4]]:
+        if val > 0:
+            cores_diferenca.append("#FFBFC4")  # vermelho claro
+        elif val < 0:
+            cores_diferenca.append("#A6DFB4")  # verde claro
+        else:
+            cores_diferenca.append("white")
 
-    # Criar figura exatamente do tamanho da tabela
-    fig, ax = plt.subplots(figsize=(10, len(df)*0.6))
-    ax.axis('off')
+    # Cores % OS no Prazo Padrão
+    cores_prazo = []
+    for val in df[df.columns[5]]:  # valores de 0 a 100
+        if val < 60:          # até 59,99%
+            cores_prazo.append("#FFBFC4")  # vermelho claro
+        elif val < 85:        # 60 até 84,99%
+            cores_prazo.append("#FFEC6E")  # laranja claro
+        else:                 # 85% ou mais
+            cores_prazo.append("#A6DFB4")  # verde claro
 
     # Criar tabela
-    tabela = plt.table(
-        cellText=df_formatado.values,
-        colLabels=df_formatado.columns,
-        cellLoc='center',
-        loc='center'
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(
+                    values=list(df_format.columns),
+                    fill_color="#002060",
+                    align="center",
+                    font=dict(color="white", size=20, family="Arial"),
+                    height=44,
+                    line_color="black",
+                    line_width=2
+                ),
+                cells=dict(
+                    values=[df_format[c] for c in df_format.columns],
+                    fill_color=[
+                        ['white']*len(df_format),   
+                        ['white']*len(df_format),   
+                        ['white']*len(df_format),   
+                        ['white']*len(df_format),   
+                        cores_diferenca,            
+                        cores_prazo                 
+                    ],
+                    align="center",
+                    font=dict(color="black", size=18, family="Arial"),
+                    height=40,
+                    line_color="black",
+                    line_width=1
+                ),
+                columnwidth=[0.3, 0.07, 0.08, 0.09, 0.06, 0.08]
+            )
+        ]
     )
 
-    # Estilo do cabeçalho
-    for (row, col), cell in tabela.get_celld().items():
-        if row == 0:  # Cabeçalho
-            cell.set_facecolor('#002060')  # Azul escuro
-            cell.set_text_props(color='white', weight='bold', fontsize=10)
-        else:
-            cell.set_text_props(fontsize=9)
+    linhas = len(df_format)
+    altura = 44 + linhas*40 + 20
+    largura = 1500
 
-        cell.set_edgecolor('black')
+    fig.update_layout(
+        autosize=False,
+        width=largura,
+        height=altura,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor="white",
+        plot_bgcolor="white"
+    )
 
-    # Ajuste layout
-    tabela.scale(1, 1.4)
-    plt.tight_layout(pad=0)
-
-    # Salvar sem bordas
-    plt.savefig(caminho_arquivo, bbox_inches='tight', dpi=300)
-    plt.close()
+    fig.write_image(f"{caminho_arquivo}.png", scale=3)

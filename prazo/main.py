@@ -63,7 +63,7 @@ def main():
         top3 = gerar_top3(df_3meses[df_3meses['EMPRESA'] == conc])
         salvar_tabela_img(top3, f"{PASTA_SAIDA}/{conc}_Top3_3Meses")
 
-    # Gráficos
+    '''# Gráficos
     for conc in CONCESSIONARIAS:
         df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-04-01'), pd.to_datetime('2025-09-30'))
         df_graf = df_graf[df_graf['EMPRESA'] == conc]
@@ -78,7 +78,7 @@ def main():
             No_Prazo=('StatusPrazo', lambda x: (x == 'No Prazo').sum())
         ).reset_index()
         resumo_conc['%_No_Prazo'] = round((resumo_conc['No_Prazo'] / resumo_conc['Qtde_OS']) * 100, 2)
-        gerar_grafico(resumo_conc, PASTA_SAIDA, conc)
+        gerar_grafico(resumo_conc, PASTA_SAIDA, conc)'''
 
 if __name__ == "__main__":
     main()
