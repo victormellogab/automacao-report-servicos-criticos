@@ -7,23 +7,7 @@ from top3 import gerar_top3
 from grafico import gerar_grafico
 import pandas as pd
 import matplotlib.pyplot as plt
-
-def salvar_tabela_imagem(df, pasta_saida, nome_arquivo):
-    fig, ax = plt.subplots(figsize=(len(df.columns)*2, len(df)*0.5 + 1))
-    ax.axis('tight')
-    ax.axis('off')
-    table = ax.table(cellText=df.values,
-                     colLabels=df.columns,
-                     cellLoc='center',
-                     loc='center')
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.auto_set_column_width(col=list(range(len(df.columns))))
-    
-    caminho = f"{pasta_saida}/{nome_arquivo}.png"
-    plt.savefig(caminho, bbox_inches='tight', dpi=300)
-    plt.close()
-    print(f"✅ Tabela salva em: {caminho}")
+from tabela import salvar_tabela_img
 
 def main():
     # Carregar dados
@@ -66,7 +50,7 @@ def main():
         df_top10 = df_top10[df_top10['PrazoPadrao'].notna()]
         df_top10 = criar_status_prazo(df_top10)
         top10 = gerar_top10(df_top10[df_top10['EMPRESA'] == conc])
-        salvar_tabela_imagem(top10, PASTA_SAIDA, f"{conc}_Top10_Setembro")
+        salvar_tabela_img(top10, f"{PASTA_SAIDA}/{conc}_Top10_Setembro")
 
     # Top 3 últimos 3 meses
     for conc in CONCESSIONARIAS:
@@ -77,7 +61,7 @@ def main():
         df_3meses = df_3meses[df_3meses['PrazoPadrao'].notna()]
         df_3meses = criar_status_prazo(df_3meses)
         top3 = gerar_top3(df_3meses[df_3meses['EMPRESA'] == conc])
-        salvar_tabela_imagem(top3, PASTA_SAIDA, f"{conc}_Top3_3Meses")
+        salvar_tabela_img(top3, f"{PASTA_SAIDA}/{conc}_Top3_3Meses")
 
     # Gráficos
     for conc in CONCESSIONARIAS:
