@@ -74,7 +74,7 @@ df_setembro['StatusPrazo'] = df_setembro.apply(
 # Listas das Concessionárias
 concessionarias = [
     #'CAAN',
-    #'CAC',
+    'CAC',
     #'CAI',
     #'CAIZ',
     #'CAJ',
@@ -83,7 +83,7 @@ concessionarias = [
     #'CANF',
     #'CAP',
     #'CAPAM',
-    'CAPY',
+    #'CAPY',
     #'CAV',
     #'RIOMAIS'
 ]
@@ -205,43 +205,76 @@ for conc in concessionarias:
     # Ordenar por mês
     resumo_conc = resumo_conc.sort_values('Mes')
 
-    # Preparar dados para gráfico
-    meses = resumo_conc['Mes'].dt.strftime('%b/%Y')
+    meses = resumo_conc['Mes'].dt.month_name(locale='pt_BR')
     qtde_os = resumo_conc['Qtde_OS']
     pct_no_prazo = resumo_conc['%_No_Prazo']
 
     # --- Criar gráfico ---
     fig, ax1 = plt.subplots(figsize=(10, 5))
 
-    # Barras = quantidade de OS
-    bars = ax1.bar(meses, qtde_os, label='Quantidade de OS', color='skyblue')
-    ax1.set_xlabel('Mês')
-    ax1.tick_params(axis='x', rotation=45)
-    ax1.set_yticks([])  # remove ticks do eixo Y
+    # Fundo branco
+    fig.patch.set_facecolor('white')
+    ax1.set_facecolor('white')
+    ax2 = ax1.twinx()
+    ax2.set_facecolor('white')
 
-    # Adicionar os valores acima das barras
+    # Remover borda ao redor
+    for spine in ax1.spines.values(): spine.set_visible(False)
+    for spine in ax2.spines.values(): spine.set_visible(False)
+
+    # Barras = quantidade de OS
+    bars = ax1.bar(meses, qtde_os, label='Qtde de OS', color='#1f4e79')
+    ax1.tick_params(axis='x', rotation=0)
+    ax1.set_yticks([])
+
+    # Valores no meio da barra com milhar apenas quando >= 1000
     for bar in bars:
-        height = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width()/2, height + 3,
-                 f'{int(height)}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+        h = bar.get_height()
+
+        if h >= 1000:
+            valor = f"{h:,.0f}".replace(",", ".")  # 1.000 / 25.430 etc
+        else:
+            valor = str(int(h))  # 850 / 320 etc
+
+        ax1.text(
+            bar.get_x() + bar.get_width()/2, h/2,
+            valor,
+            ha='center', va='center',
+            fontsize=10, fontweight='bold',
+            color="white"
+        )
 
     # Linha = % no prazo
-    ax2 = ax1.twinx()
-    ax2.plot(meses, pct_no_prazo, marker='o', color='orange', linewidth=2, label='% No Prazo')
-    ax2.set_yticks([])  # remove ticks do eixo Y
+    ax2.plot(meses, pct_no_prazo, marker='o', linewidth=2, label='% Serviços No Prazo', color='#d97a00')
+    ax2.set_yticks([])
 
-    # Adicionar valores da linha (% no prazo) acima dos pontos
+    # Valores logo acima do ponto da linha (cinza escuro)
     for i, pct in enumerate(pct_no_prazo):
-        ax2.text(i, pct + 1.5, f'{pct}%', ha='center', va='bottom', fontsize=10, fontweight='bold', color='orange')
+        ax2.text(
+            i, pct + 0.2, f'{pct}%',
+            ha='center', va='bottom',
+            fontsize=10, fontweight='bold',
+            color='#4a4a4a',
+            bbox=dict(
+                boxstyle='round,pad=0.25',   # arredondado
+                facecolor='white',          # fundo branco
+                edgecolor='none',           # sem borda
+                alpha=0.9                   # leve transparência
+            )
+        )
 
-    # Título
-    plt.title(f'{conc} — Evolução Mensal (Abr → Set 2025)\nQtde de Serviços x % No Prazo')
+    # Legenda fora do gráfico, no topo
+    fig.legend(
+        loc='upper center',
+        bbox_to_anchor=(0.5, 1.07),
+        ncol=2,
+        frameon=False
+    )
 
     fig.tight_layout()
 
-    # Salvar gráfico
     caminho_grafico = os.path.join(pasta_saida, f'{conc}_Evolucao_Abr-Set_2025.png')
-    plt.savefig(caminho_grafico, dpi=300)
+    plt.savefig(caminho_grafico, dpi=300, bbox_inches='tight')
     plt.close()
 
     print(f"\n✅ Gráfico {conc} salvo em: {caminho_grafico}")
