@@ -19,9 +19,9 @@ def gerar_cards_os(df_mes, conc, caminho_arquivo):
     fig = go.Figure()
 
     # Tamanho dos cards
-    card_width = 1
+    card_width = 0.8
     card_height = 1
-    card_gap = 0.1
+    card_gap = 0.07
     radius = 0.15
 
     # Função para retângulo arredondado
@@ -72,8 +72,8 @@ def gerar_cards_os(df_mes, conc, caminho_arquivo):
     fig.update_xaxes(visible=False, range=[0, len(textos)*(card_width+card_gap)-card_gap])
     fig.update_yaxes(visible=False, range=[0, card_height])
     fig.update_layout(
-        width=int(len(textos)*400),
-        height=200,
+        width=int(len(textos)*(card_width*480)),  # reduzir largura total proporcional
+        height=230,  # aumenta um pouco a altura para deixar menos retangular
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor="white",
         plot_bgcolor="white"
