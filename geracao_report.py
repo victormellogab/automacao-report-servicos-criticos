@@ -34,13 +34,15 @@ IMAGENS = {
     }
 }
 
-def add_imagem_ou_texto(doc, texto, caminho_imagem):
+def add_imagem_ou_texto(doc, texto, caminho_imagem, tamanho_pct=100):
     p = doc.add_paragraph()
     p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     
     if caminho_imagem:
+        # calcula a largura em polegadas proporcional ao percentual
+        largura_inch = Inches(6) * (tamanho_pct / 100)
         run = p.add_run()
-        run.add_picture(caminho_imagem, width=Inches(6))
+        run.add_picture(caminho_imagem, width=largura_inch)
     else:
         run = p.add_run(texto)
         run.font.name = "Calibri"
@@ -48,7 +50,6 @@ def add_imagem_ou_texto(doc, texto, caminho_imagem):
         run.font.size = Pt(12)
         run.font.bold = False
         run.font.color.rgb = RGBColor(0,0,0)
-
 
 # ----------- FUNÇÃO DE CRIAÇÃO DO DOCX COM IMAGENS E FONTE PADRÃO -----------
 def gerar_documento_report(concessionaria, pasta_saida, imagens):
@@ -101,22 +102,22 @@ def gerar_documento_report(concessionaria, pasta_saida, imagens):
     # Prazo padrão
     h = doc.add_heading("Indicador de Serviços no Prazo Padrão", level=1)
     h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem do card em anexo]", imagens["card_prazo"])
+    add_imagem_ou_texto(doc, "[Imagem do card em anexo]", imagens["card_prazo"], tamanho_pct=70)
 
     # Top 10
     h = doc.add_heading("Top 10 Serviços com Menor Percentual de OS no Prazo Padrão", level=1)
     h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem da tabela top10 em anexo]", imagens["top10_prazo"])
+    add_imagem_ou_texto(doc, "[Imagem da tabela top10 em anexo]", imagens["top10_prazo"], tamanho_pct=115)
 
     # Top 3
     h = doc.add_heading("Top 3 Percentis de Desempenho – Maiores Ofensores (Ref. Últimos 3 meses)", level=1)
     h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem da tabela top3 em anexo]", imagens["top3_prazo"])
+    add_imagem_ou_texto(doc, "[Imagem da tabela top3 em anexo]", imagens["top3_prazo"], tamanho_pct=110)
 
     # Gráfico
     h = doc.add_heading("Qtde de OS e % Serviços no Prazo - Últimos 6 meses", level=1)
     h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem do gráfico em anexo]", imagens["grafico_prazo"])
+    add_imagem_ou_texto(doc, "[Imagem do gráfico em anexo]", imagens["grafico_prazo"], tamanho_pct=80)
 
     # ANEXO
     doc.add_heading("ANEXO", level=1)
