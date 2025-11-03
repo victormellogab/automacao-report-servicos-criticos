@@ -8,6 +8,7 @@ from grafico import gerar_grafico
 import pandas as pd
 import matplotlib.pyplot as plt
 from tabela import salvar_tabela_img
+from card import gerar_cards_os
 
 def main():
     # Carregar dados
@@ -28,17 +29,8 @@ def main():
         df_mes = df_mes[df_mes['PrazoPadrao'].notna()]
         df_mes = criar_status_prazo(df_mes)
 
-        total_os = len(df_mes)
-        no_prazo = len(df_mes[df_mes['StatusPrazo'] == 'No Prazo'])
-        fora_prazo = len(df_mes[df_mes['StatusPrazo'] == 'Fora do Prazo'])
-
-        pct_no = round((no_prazo / total_os) * 100, 2) if total_os > 0 else 0
-        pct_fora = round((fora_prazo / total_os) * 100, 2) if total_os > 0 else 0
-
-        print(f"\n--- {conc} ---")
-        print(f"Total de OS: {total_os}")
-        print(f"No Prazo: {no_prazo} ({pct_no}%)")
-        print(f"Fora do Prazo: {fora_prazo} ({pct_fora}%)")
+        # Gerar cards
+        gerar_cards_os(df_mes, conc, f"{PASTA_SAIDA}/{conc}_Resumo_Setembro")
 
     # Top 10 do mês
     caminho_top10 = "top10_setembro.xlsx"
@@ -63,7 +55,7 @@ def main():
         top3 = gerar_top3(df_3meses[df_3meses['EMPRESA'] == conc])
         salvar_tabela_img(top3, f"{PASTA_SAIDA}/{conc}_Top3_3Meses")
 
-    '''# Gráficos
+    # Gráficos
     for conc in CONCESSIONARIAS:
         df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-04-01'), pd.to_datetime('2025-09-30'))
         df_graf = df_graf[df_graf['EMPRESA'] == conc]
@@ -78,7 +70,7 @@ def main():
             No_Prazo=('StatusPrazo', lambda x: (x == 'No Prazo').sum())
         ).reset_index()
         resumo_conc['%_No_Prazo'] = round((resumo_conc['No_Prazo'] / resumo_conc['Qtde_OS']) * 100, 2)
-        gerar_grafico(resumo_conc, PASTA_SAIDA, conc)'''
+        gerar_grafico(resumo_conc, PASTA_SAIDA, conc)
 
 if __name__ == "__main__":
     main()
