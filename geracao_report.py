@@ -1,17 +1,17 @@
 import os
+import pandas as pd
 from datetime import datetime
 from docx import Document
 from docx.shared import Inches, Pt, Cm, RGBColor
 from docx.oxml.ns import qn
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+import plotly.graph_objects as go
 
 # ----------- CONFIGURAÇÃO -----------
 PASTA_SAIDA = r'H:\COMERCIAL\MEDIÇÃO\ARQUIVO MORTO\BERNARDO\GSC\Automação Report'
 os.makedirs(PASTA_SAIDA, exist_ok=True)
 
-CONCESSIONARIAS = [
-    'CAC',
-]
+CONCESSIONARIAS = ['CAC']
 
 CONCESSIONARIA_NOME = {
     'CAC': 'Concessionária Águas das Agulhas Negras',
@@ -34,12 +34,66 @@ IMAGENS = {
     }
 }
 
-def add_imagem_ou_texto(doc, texto, caminho_imagem, tamanho_pct=100):
-    p = doc.add_paragraph()
-    p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+# Caminho do Excel da tabela de serviços prioritários
+CAMINHO_TABELA = r"C:\Users\victor.mello\OneDrive - Grupo Aguas do Brasil\Área de Trabalho\Script Geração Report Serviços\Dados\Cesta de Serviços.xlsx"
+IMG_TABELA = os.path.join(PASTA_SAIDA, "Tabela_Prioritarios.png")
+
+# ----------- FUNÇÃO PARA GERAR IMAGEM DA TABELA -----------
+def gerar_imagem_tabela(excel_path, caminho_saida):
+    df = pd.read_excel(excel_path)
+
+    # Ajustar largura das colunas proporcional ao tamanho máximo do conteúdo
+    max_lens = [max(df[col].astype(str).map(len).max(), len(col)) for col in df.columns]
     
-    if caminho_imagem:
-        # calcula a largura em polegadas proporcional ao percentual
+    # Diminuir a largura da coluna "Serviços" (primeira coluna)
+    max_lens[0] = int(max_lens[0] * 0.16)  # 60% do tamanho proporcional
+    
+    total_len = sum(max_lens)
+    column_widths = [length / total_len for length in max_lens]
+
+    fig = go.Figure(data=[go.Table(
+        columnwidth=column_widths,
+        header=dict(
+            values=list(df.columns),
+            fill_color='darkblue',
+            font=dict(color='white', size=14),
+            align='center'
+        ),
+        cells=dict(
+            values=[df[col] for col in df.columns],
+            fill_color='white',
+            font=dict(color='black', size=12),
+            align=['left' if col=='Serviços' else 'center' for col in df.columns]
+        )
+    )])
+
+    # Altura dinâmica: 40px por linha + 40px para o cabeçalho
+    altura = 21 + 21 * len(df)
+    
+    # Layout com altura calculada e sem margens extras
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        width=None,
+        height=altura
+    )
+
+    fig.write_image(caminho_saida, scale=3)
+
+# ----------- FUNÇÃO PARA ADICIONAR IMAGEM OU TEXTO -----------
+def add_imagem_ou_texto(doc, texto, caminho_imagem, tamanho_pct=100, align='center'):
+    p = doc.add_paragraph()
+    
+    # Definir alinhamento
+    if align == 'center':
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    elif align == 'left':
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+    elif align == 'right':
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+    else:
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    if caminho_imagem and os.path.exists(caminho_imagem):
         largura_inch = Inches(6) * (tamanho_pct / 100)
         run = p.add_run()
         run.add_picture(caminho_imagem, width=largura_inch)
@@ -51,8 +105,11 @@ def add_imagem_ou_texto(doc, texto, caminho_imagem, tamanho_pct=100):
         run.font.bold = False
         run.font.color.rgb = RGBColor(0,0,0)
 
-# ----------- FUNÇÃO DE CRIAÇÃO DO DOCX COM IMAGENS E FONTE PADRÃO -----------
+# ----------- FUNÇÃO DE CRIAÇÃO DO DOCUMENTO -----------
 def gerar_documento_report(concessionaria, pasta_saida, imagens):
+    # Gera a imagem da tabela
+    gerar_imagem_tabela(CAMINHO_TABELA, IMG_TABELA)
+    
     doc = Document()
 
     # ---------- CONFIGURAR MARGENS ----------
@@ -68,7 +125,7 @@ def gerar_documento_report(concessionaria, pasta_saida, imagens):
     style.font.size = Pt(11)
     style.element.rPr.rFonts.set(qn('w:eastAsia'), 'Calibri')
 
-    # Configurar estilos de títulos para Calibri também
+    # Configurar estilos de títulos
     for level in range(1, 10):
         try:
             s = doc.styles[f'Heading {level}']
@@ -89,40 +146,31 @@ def gerar_documento_report(concessionaria, pasta_saida, imagens):
     run.font.name = 'Calibri'
     run._element.rPr.rFonts.set(qn('w:eastAsia'), 'Calibri')
     run.font.size = Pt(21)
+    run.add_break()  # quebra de linha
 
-    # << SHIFT+ENTER >>
-    run.add_break()  # quebra de linha sem espaço extra
-
-    # Subtítulo na mesma estrutura
+    # Subtítulo
     run2 = p.add_run(f"Report Cesta de Serviços – {MES} {ANO}")
     run2.font.name = 'Calibri'
     run2._element.rPr.rFonts.set(qn('w:eastAsia'), 'Calibri')
     run2.font.size = Pt(12)
 
-    # Prazo padrão
-    h = doc.add_heading("Indicador de Serviços no Prazo Padrão", level=1)
-    h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem do card em anexo]", imagens["card_prazo"], tamanho_pct=70)
+    # Seções principais
+    seccoes = [
+        ("Indicador de Serviços no Prazo Padrão", "card_prazo", 70),
+        ("Top 10 Serviços com Menor Percentual de OS no Prazo Padrão", "top10_prazo", 115),
+        ("Top 3 Percentis de Desempenho – Maiores Ofensores (Ref. Últimos 3 meses)", "top3_prazo", 110),
+        ("Qtde de OS e % Serviços no Prazo - Últimos 6 meses", "grafico_prazo", 80)
+    ]
 
-    # Top 10
-    h = doc.add_heading("Top 10 Serviços com Menor Percentual de OS no Prazo Padrão", level=1)
-    h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem da tabela top10 em anexo]", imagens["top10_prazo"], tamanho_pct=115)
+    for titulo, chave_img, tamanho in seccoes:
+        h = doc.add_heading(titulo, level=1)
+        h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        add_imagem_ou_texto(doc, f"[Imagem de {titulo} em anexo]", imagens[chave_img], tamanho_pct=tamanho, align='center')
 
-    # Top 3
-    h = doc.add_heading("Top 3 Percentis de Desempenho – Maiores Ofensores (Ref. Últimos 3 meses)", level=1)
-    h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem da tabela top3 em anexo]", imagens["top3_prazo"], tamanho_pct=110)
-
-    # Gráfico
-    h = doc.add_heading("Qtde de OS e % Serviços no Prazo - Últimos 6 meses", level=1)
-    h.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    add_imagem_ou_texto(doc, "[Imagem do gráfico em anexo]", imagens["grafico_prazo"], tamanho_pct=80)
-
-    # ANEXO
+    # ANEXO com a tabela
     doc.add_heading("ANEXO", level=1)
     doc.add_paragraph("Considera-se essa Tabela de Serviços Prioritários:")
-    doc.add_paragraph("[Imagem da tabela de serviços em anexo]")
+    add_imagem_ou_texto(doc, "[Tabela de serviços em anexo]", IMG_TABELA, tamanho_pct=100, align='left')
 
     # Fonte de dados e premissas
     doc.add_heading("FONTE DE DADOS", level=1)
@@ -145,7 +193,6 @@ def gerar_documento_report(concessionaria, pasta_saida, imagens):
     caminho_doc = os.path.join(pasta_saida, f"{concessionaria}_Report.docx")
     doc.save(caminho_doc)
     print(f"Documento gerado: {caminho_doc}")
-
 
 # ----------- EXECUÇÃO -----------
 if __name__ == "__main__":
