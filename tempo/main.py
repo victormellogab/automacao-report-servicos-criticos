@@ -9,13 +9,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tabela import salvar_tabela_img
 from card import gerar_cards_os
+from medidas import calcular_tempo_padrao_dinamico
 
 def main():
     # Carregar dados
     df, df_servicos = carregar_dados()
 
-    # Criar dicionário de prazo
-    prazo_dict = criar_prazo_dict(df_servicos)
+    df = calcular_tempo_padrao_dinamico(df, df_servicos)
     
     # Resumo do mês (contagem OS / % no prazo / % fora)
     print("\n===== Resumo Setembro 2025 =====")
@@ -26,32 +26,24 @@ def main():
         df_mes = filtrar_executados(df_mes)
         df_mes = excluir_invalidos(df_mes)
         df_mes = calcular_dias_exec(df_mes, 'DATA_HORA_INCL', 'DATA_BAIXA')
-        df_mes['PrazoPadrao'] = df_mes.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
-        df_mes = df_mes[df_mes['PrazoPadrao'].notna()]
 
         # Gerar cards
         gerar_cards_os(df_mes, conc, f"{PASTA_SAIDA}/{conc}_Resumo_Setembro")
-'''
+
     # Top 10 do mês
     caminho_top10 = "top10_setembro.xlsx"
     for conc in CONCESSIONARIAS:
         df_top10 = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-09-01'), pd.to_datetime('2025-09-30'))
         df_top10 = excluir_invalidos(df_top10)
         df_top10 = calcular_dias_exec(df_top10, 'DATA_HORA_INCL', 'DATA_BAIXA')
-        df_top10['PrazoPadrao'] = df_top10.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
-        df_top10 = df_top10[df_top10['PrazoPadrao'].notna()]
-        df_top10 = criar_status_prazo(df_top10)
         top10 = gerar_top10(df_top10[df_top10['EMPRESA'] == conc])
         salvar_tabela_img(top10, f"{PASTA_SAIDA}/{conc}_Top10_Setembro")
-
+'''
     # Top 3 últimos 3 meses
     for conc in CONCESSIONARIAS:
         df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-07-01'), pd.to_datetime('2025-09-30'))
         df_3meses = excluir_invalidos(df_3meses)
         df_3meses = calcular_dias_exec(df_3meses, 'DATA_HORA_INCL', 'DATA_BAIXA')
-        df_3meses['PrazoPadrao'] = df_3meses.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
-        df_3meses = df_3meses[df_3meses['PrazoPadrao'].notna()]
-        df_3meses = criar_status_prazo(df_3meses)
         top3 = gerar_top3(df_3meses[df_3meses['EMPRESA'] == conc])
         salvar_tabela_img(top3, f"{PASTA_SAIDA}/{conc}_Top3_3Meses")
 
@@ -61,9 +53,6 @@ def main():
         df_graf = df_graf[df_graf['EMPRESA'] == conc]
         df_graf = excluir_invalidos(df_graf)
         df_graf = calcular_dias_exec(df_graf, 'DATA_HORA_INCL', 'DATA_BAIXA')
-        df_graf['PrazoPadrao'] = df_graf.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
-        df_graf = df_graf[df_graf['PrazoPadrao'].notna()]
-        df_graf = criar_status_prazo(df_graf)
         df_graf['Mes'] = df_graf['DATA_BAIXA'].dt.to_period('M').dt.to_timestamp()
         resumo_conc = df_graf.groupby('Mes').agg(
             Qtde_OS=('Nº O.S.', 'count'),
