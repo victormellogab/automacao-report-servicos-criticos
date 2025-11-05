@@ -10,17 +10,17 @@ os.makedirs(PASTA_SAIDA, exist_ok=True)
 
 # Lista de concessionárias
 CONCESSIONARIAS = [
-    'CAAN',
+    #'CAAN',
     'CAC',
-    'CAI',
-    'CAIZ',
-    'CAJ',
-    'CAJA',
-    'CAN',
-    'CANF',
-    'CAP',
-    'CAPAM',
-    'CAPY',
-    'CAV',
+    #'CAI',
+    #'CAIZ',
+    #'CAJ',
+    #'CAJA',
+    #'CAN',
+    #'CANF',
+    #'CAP',
+    #'CAPAM',
+    #'CAPY',
+    #'CAV',
     #'RIOMAIS'
 ]
