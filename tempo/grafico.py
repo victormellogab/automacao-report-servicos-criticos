@@ -4,7 +4,7 @@ import os
 def gerar_grafico(resumo_conc, pasta_saida, conc):
     meses = resumo_conc['Mes'].dt.month_name(locale='pt_BR')
     qtde_os = resumo_conc['Qtde_OS']
-    pct_no_tempo = resumo_conc['%_No_Tempo']
+    pct_no_tempo = resumo_conc['%_No_Tempo']  # ✅ Agora correto
 
     fig, ax = plt.subplots(figsize=(10, 5))
     fig.patch.set_facecolor('white')
@@ -18,26 +18,25 @@ def gerar_grafico(resumo_conc, pasta_saida, conc):
     bars = ax.bar(meses, qtde_os, color='#1f4e79', label='Qtde de OS')
     ax.set_yticks([])
 
-    # --- Linha dentro da barra ---
+    # --- Linha (convertendo % para altura relativa) ---
     y_linha = qtde_os * (pct_no_tempo / 100)
     ax.plot(meses, y_linha, marker='o', linewidth=2, color='#d97a00',
             label='% Serviços No Tempo')
 
-    # --- Texto da coluna (na base, dentro da barra) ---
+    # --- Texto dentro das barras ---
     for bar in bars:
         h = bar.get_height()
         valor = f"{h:,.0f}".replace(",", ".") if h >= 1000 else str(int(h))
-
         ax.text(
             bar.get_x() + bar.get_width()/2,
-            h * 0.05,               # <<<<<< NOVO: valor dentro da barra corretamente
+            h*0.05,
             valor,
             ha='center', va='bottom',
             fontsize=10, fontweight='bold',
             color="white"
         )
 
-    # --- Texto da linha ---
+    # --- Texto da linha (valores da % no tempo) ---
     for i, (pct_real, y) in enumerate(zip(pct_no_tempo, y_linha)):
         ax.text(
             i, y + (qtde_os[i] * 0.05),
