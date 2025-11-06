@@ -18,6 +18,7 @@ def carregar_dados():
     # ✅ Converter datas
     df['DATA_HORA_INCL'] = pd.to_datetime(df['DATA_HORA_INCL'], dayfirst=True, errors='coerce')
     df['DATA_BAIXA'] = pd.to_datetime(df['DATA_BAIXA'], dayfirst=True, errors='coerce')
+    df['Prazo da Empresa'] = pd.to_datetime(df['Prazo da Empresa'], dayfirst=True, errors='coerce')
 
     # ✅ Remover registros inválidos
     df = df[df['DATA_HORA_INCL'].notna() & df['DATA_BAIXA'].notna()]

@@ -1,4 +1,5 @@
 import math
+import pandas as pd
 
 # Calcular DiasDeExec
 def calcular_dias_exec(df, coluna_inicio, coluna_fim):
@@ -8,10 +9,25 @@ def calcular_dias_exec(df, coluna_inicio, coluna_fim):
 
 # Criar StatusPrazo
 def criar_status_prazo(df):
-    df['StatusPrazo'] = df.apply(
-        lambda x: 'No Prazo' if x['DiasDeExec'] <= x['PrazoPadrao'] else 'Fora do Prazo',
+    # Ajuste de prazo conforme regra
+    df['PrazoAjustado'] = df.apply(
+        lambda x: x['Prazo da Empresa'] + pd.Timedelta(days=3)
+        if x['Área Exec.'] == 'GESTÃO DE SERVIÇOS - COMERCIAL'
+        else x['Prazo da Empresa'],
         axis=1
     )
+
+    # Criar StatusPrazo seguindo o SWITCH do DAX
+    def status(row):
+        if pd.isna(row['DATA_BAIXA']):
+            return "Em Andamento"
+        elif row['DATA_BAIXA'] <= row['PrazoAjustado']:
+            return "No Prazo"
+        else:
+            return "Fora do Prazo"
+
+    df['StatusPrazo'] = df.apply(status, axis=1)
+
     return df
 
 # Criar dicionário de PrazoPadrao
