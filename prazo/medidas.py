@@ -47,3 +47,20 @@ def calcular_prazo_dax(row, prazo_dict, df_servicos):
             return prazos.mean()
         else:
             return None
+
+def gab_calcular_prazo_dax(row, df_os, df_servicos):
+    """
+    Replica exatamente o cálculo DAX consolidado:
+    - Quando não há EMPRESA selecionada (GAB),
+      o Power BI faz AVERAGE('TODOS_SERVICOS'[Prazo para Empresa])
+      considerando apenas o serviço atual.
+    """
+    serv = row['Servico_Limpo']
+
+    prazos = df_servicos.loc[
+        (df_servicos['Serviços'] == serv) & 
+        (df_servicos['Prazo para Empresa'].notna()),
+        'Prazo para Empresa'
+    ]
+
+    return round(prazos.mean(), 2) if not prazos.empty else None
