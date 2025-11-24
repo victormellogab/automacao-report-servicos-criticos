@@ -6,35 +6,50 @@ from docx.shared import Inches, Pt, Cm, RGBColor
 from docx.oxml.ns import qn
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 import plotly.graph_objects as go
-from prazo import construir_primeira_pagina  # import da primeira página
-from tempo import construir_segunda_pagina
+from prazo_pag import construir_primeira_pagina
+from tempo_pag import construir_segunda_pagina
+from config import CONCESSIONARIAS
 
 # ----------- CONFIGURAÇÃO -----------
 PASTA_SAIDA = r'H:\COMERCIAL\MEDIÇÃO\ARQUIVO MORTO\BERNARDO\GSC\Automação Report'
 os.makedirs(PASTA_SAIDA, exist_ok=True)
 
-CONCESSIONARIAS = ['CAC']
-CONCESSIONARIA_NOME = {'CAC': 'Concessionária Águas da Condessa'}
+CONCESSIONARIA_NOME = {
+    'CAAN': 'Concessionária Águas das Agulhas Negras',
+    'CAC': 'Concessionária Águas da Condessa',
+    'CAI': 'Concessionária Águas do Imperador',
+    'CAIZ': 'Concessionária Águas da Imperatriz',
+    'CAJ': 'Concessionária Águas de Juturnaíba',
+    'CAJA': 'Concessionária Águas de Jahu',
+    'CAN': 'Concessionária Águas de Niterói',
+    'CANF': 'Concessionária Águas de Nova Friburgo',
+    'CAP': 'Concessionária Águas do Paraíba',
+    'CAPAM': 'Concessionária Águas de Pará de Minas',
+    'CAPY': 'Concessionária Águas de Paraty',
+    'CAV': 'Concessionária Águas de Votorantim',
+}
 
 MES = "Outubro"
 ANO = 2025
 
-IMAGENS = {
-    'CAC': {
-        "card_prazo": os.path.join(PASTA_SAIDA, "CAC_Resumo_Setembro.png"),
-        "top10_prazo": os.path.join(PASTA_SAIDA, "CAC_Top10_Setembro.png"),
-        "top3_prazo": os.path.join(PASTA_SAIDA, "CAC_Top3_3Meses.png"),
-        "grafico_prazo": os.path.join(PASTA_SAIDA, "CAC_Evolucao_Abr-Set_2025.png"),
-        "card_tempo": os.path.join(PASTA_SAIDA, "CAC_Resumo_Setembro.png"),
-        "top10_tempo": os.path.join(PASTA_SAIDA, "CAC_Top10_Setembro.png"),
-        "top3_tempo": os.path.join(PASTA_SAIDA, "CAC_Top3_3Meses.png"),
-        "grafico_tempo": os.path.join(PASTA_SAIDA, "CAC_Evolucao_Abr-Set_2025.png"),
-        "tabela_prioritarios": None
-    }
-}
-
-CAMINHO_TABELA = r"C:\Users\victor.mello\OneDrive - Grupo Aguas do Brasil\Área de Trabalho\Script Geração Report Serviços\Dados\Cesta de Serviços.xlsx"
+IMAGENS = {}
 IMG_TABELA = os.path.join(PASTA_SAIDA, "Tabela_Prioritarios.png")
+CAMINHO_TABELA = r"C:\dados-report\Cesta de Serviços.xlsx"
+
+for conc in CONCESSIONARIAS:
+    IMAGENS[conc] = {
+        "card_prazo": os.path.join(PASTA_SAIDA, f"{conc}_Prazo_Cards.png"),
+        "top10_prazo": os.path.join(PASTA_SAIDA, f"{conc}_Prazo_Top10.png"),
+        "top3_prazo": os.path.join(PASTA_SAIDA, f"{conc}_Prazo_Top3.png"),
+        "grafico_prazo": os.path.join(PASTA_SAIDA, f"{conc}_Prazo_Grafico_6meses.png"),
+
+        "card_tempo": os.path.join(PASTA_SAIDA, f"{conc}_Tempo_Cards.png"),
+        "top10_tempo": os.path.join(PASTA_SAIDA, f"{conc}_Tempo_Top10.png"),
+        "top3_tempo": os.path.join(PASTA_SAIDA, f"{conc}_Tempo_Top3.png"),
+        "grafico_tempo": os.path.join(PASTA_SAIDA, f"{conc}_Tempo_Grafico_6meses.png"),
+
+        "tabela_prioritarios": IMG_TABELA  # ainda usar a mesma tabela
+    }
 
 # ----------- FUNÇÕES UTILS -----------
 def gerar_imagem_tabela(excel_path, caminho_saida):
