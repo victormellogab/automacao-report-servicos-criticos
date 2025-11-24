@@ -1,14 +1,14 @@
-from config import CONCESSIONARIAS, PASTA_SAIDA
-from carregamento import carregar_dados
-from filtros import filtrar_periodo, excluir_invalidos, filtrar_executados
-from top10 import gerar_top10
-from top3 import gerar_top3
-from grafico import gerar_grafico
+from tempo.config import CONCESSIONARIAS, PASTA_SAIDA
+from tempo.carregamento import carregar_dados
+from tempo.filtros import filtrar_periodo, excluir_invalidos, filtrar_executados
+from tempo.top10 import gerar_top10
+from tempo.top3 import gerar_top3
+from tempo.grafico import gerar_grafico
 import pandas as pd
 import matplotlib.pyplot as plt
-from tabela import salvar_tabela_img
-from card import gerar_cards_os
-from medidas import calcular_tempo_padrao_dinamico
+from tempo.tabela import salvar_tabela_img
+from tempo.card import gerar_cards_os
+from tempo.medidas import calcular_tempo_padrao_dinamico
 
 def main():
     # Carregar dados
@@ -17,37 +17,36 @@ def main():
     df = calcular_tempo_padrao_dinamico(df, df_servicos)
     
     # Resumo do mês (contagem OS / % no prazo / % fora)
-    print("\n===== Resumo Setembro 2025 =====")
+    print("\n===== Resumo Mês =====")
 
     for conc in CONCESSIONARIAS:
-        df_mes = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-09-01'), pd.to_datetime('2025-09-30'))
+        df_mes = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-10-01'), pd.to_datetime('2025-10-31'))
         df_mes = df_mes[df_mes['EMPRESA'] == conc]
         df_mes = filtrar_executados(df_mes)
         df_mes = excluir_invalidos(df_mes)
 
         # Gerar cards
-        gerar_cards_os(df_mes, conc, f"{PASTA_SAIDA}/{conc}_Resumo_Setembro")
+        gerar_cards_os(df_mes, conc, f"{PASTA_SAIDA}/{conc}_Tempo_Cards")
 
     # Top 10 do mês
-    caminho_top10 = "top10_setembro.xlsx"
     for conc in CONCESSIONARIAS:
-        df_top10 = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-09-01'), pd.to_datetime('2025-09-30'))
+        df_top10 = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-10-01'), pd.to_datetime('2025-10-31'))
         df_top10 = excluir_invalidos(df_top10)
         df_top10 = filtrar_executados(df_top10)
         top10 = gerar_top10(df_top10[df_top10['EMPRESA'] == conc])
-        salvar_tabela_img(top10, f"{PASTA_SAIDA}/{conc}_Top10_Setembro")
+        salvar_tabela_img(top10, f"{PASTA_SAIDA}/{conc}_Tempo_Top10")
 
     # Top 3 últimos 3 meses
     for conc in CONCESSIONARIAS:
-        df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-07-01'), pd.to_datetime('2025-09-30'))
+        df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-08-01'), pd.to_datetime('2025-10-31'))
         df_3meses = filtrar_executados(df_3meses)
         df_3meses = excluir_invalidos(df_3meses)
         top3 = gerar_top3(df_3meses[df_3meses['EMPRESA'] == conc])
-        salvar_tabela_img(top3, f"{PASTA_SAIDA}/{conc}_Top3_3Meses")
+        salvar_tabela_img(top3, f"{PASTA_SAIDA}/{conc}_Tempo_Top3")
 
     # Gráficos
     for conc in CONCESSIONARIAS:
-        df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-04-01'), pd.to_datetime('2025-09-30'))
+        df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-05-01'), pd.to_datetime('2025-10-31'))
         df_graf = df_graf[df_graf['EMPRESA'] == conc]
         df_graf = excluir_invalidos(df_graf)
         df_graf = filtrar_executados(df_graf)
