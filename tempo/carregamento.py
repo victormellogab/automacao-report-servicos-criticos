@@ -1,11 +1,11 @@
 import pandas as pd
-from utils import normalizar_texto
+from tempo.utils import normalizar_texto
 from config import CAMINHO_INOVA, CAMINHO_SERVICOS
 
 def carregar_dados():
     # Ler planilhas
-    df = pd.read_csv(CAMINHO_INOVA, sep=';', encoding='latin1')
-    df_servicos = pd.read_csv(CAMINHO_SERVICOS, sep=None, engine='python', encoding='latin1')
+    df = pd.read_excel(CAMINHO_INOVA, engine='openpyxl')
+    df_servicos = pd.read_csv(CAMINHO_SERVICOS, sep=';', encoding='latin1')
 
     # Limpar nomes das colunas
     df.columns = df.columns.str.strip()
