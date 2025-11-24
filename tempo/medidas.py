@@ -23,3 +23,27 @@ def calcular_tempo_padrao_dinamico(df, df_servicos):
     )
 
     return df
+
+def gab_calcular_tempo_dax(row, df_os, df_servicos):
+    serv = row['Servico_Limpo']
+
+    # Seleciona tempos definidos para esse serviço
+    tempos = df_servicos.loc[
+        (df_servicos['Serviços'] == serv) &
+        (df_servicos['Tempo Padrão'].notna()),
+        'Tempo Padrão'
+    ]
+
+    # Caso NÃO exista tempo padrão para o serviço → BI retorna 0
+    if tempos.empty:
+        return 0
+
+    # Remove tempos iguais a zero (BI ignora zeros na média)
+    tempos_validos = tempos[tempos > 0]
+
+    # Se só tinha zeros → retorna 0
+    if tempos_validos.empty:
+        return 0
+
+    # Média das concessionárias que têm tempo > 0
+    return round(tempos_validos.mean(), 2)
