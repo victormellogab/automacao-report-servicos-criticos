@@ -7,23 +7,29 @@ from textwrap import shorten
 
 # (Reutilize o mesmo mapa que você já tem em aplicar_agrupamentos)
 MAPA_AGRUPAMENTO = {
-    # Ligação Nova de Água
     "LIGAÇÃO NOVA DE ÁGUA C/ CAIXA PROTETORA PAREDE": "LIGAÇÃO NOVA DE ÁGUA",
     "LIGAÇÃO NOVA DE ÁGUA C/ CAIXA PROTETORA PISO": "LIGAÇÃO NOVA DE ÁGUA",
     "LIGAÇÃO NOVA DE ÁGUA C/ CAIXA PROTETORA TOTEM": "LIGAÇÃO NOVA DE ÁGUA",
 
-    # AVA / AVE
     "ANÁLISE DE VIABILIDADE DE ABASTECIMENTO": "AVA/AVE",
     "ANÁLISE DE VIABILIDADE DE ESGOTAMENTO": "AVA/AVE",
 
-    # Conserto de Vazamento
     "CONSERTO DE VAZAMENTO EM REDE ÁGUA": "CONSERTO DE VAZAMENTO",
     "CONSERTO DE VAZAMENTO EM RAMAL ÁGUA": "CONSERTO DE VAZAMENTO",
     "CONSERTO DE VAZAMENTO NO CAVALETE": "CONSERTO DE VAZAMENTO",
-    
-    # APA/APE
+
     "APA - AVALIAÇÃO DE POSSIBILIDADE DE ABASTECIMENTO": "APA/APE",
     "APE - AVALIAÇÃO DE POSSIBILIDADE DE ESGOTAMENTO": "APA/APE",
+
+    "FISCALIZAÇÃO DE CORTE NA REDE COM SUPRESSÃO DE RAMAL": "FISCALIZAÇÃO DE CORTE",
+    "FISCALIZAÇÃO DE CORTE NO RAMAL SEM SUPRESSÃO DE RAMAL": "FISCALIZAÇÃO DE CORTE",
+    "FISCALIZAÇÃO DE CORTE HIDRÔMETRO": "FISCALIZAÇÃO DE CORTE",
+
+    "SUSPENSÃO DE FORNECIMENTO NO HD": "SUSPENSÃO",
+    "SUSPENSÃO DE FORNECIMENTO NO RAMAL": "SUSPENSÃO",
+
+    "RELIGAÇÃO NO HD": "RELIGAÇÃO",
+    "RELIGAÇÃO NO RAMAL": "RELIGAÇÃO",
 }
 
 def _aplicar_mapa_no_df_servicos(df):
@@ -38,13 +44,13 @@ def _aplicar_mapa_no_df_servicos(df):
 def extrair_top3_concessionarias_por_servico(df_mes, top10_df, n=3):
     """
     Para cada serviço do Top10 (já agrupado),
-    extrai top 3 concessionárias que MAIS contribuíram para os ATRASOS.
+    extrai top 4 concessionárias que MAIS contribuíram para os ATRASOS.
     """
     df = _aplicar_mapa_no_df_servicos(df_mes)
 
     resultados = {}
 
-    for _, row in top10_df.head(3).iterrows():
+    for _, row in top10_df.head(4).iterrows():
         servico = row['Servico_Limpo']
 
         # Filtra o serviço agrupado
@@ -122,9 +128,17 @@ def gerar_imagem_impacto(servico, info, pasta_saida, largura=1200, altura=600):
         lambda x: np.floor(float(x) * 100) / 100
     )
 
-    # === Larguras fixas ===
-    larguras = [1.00, 0.85, 0.70, 0.50]
-    larguras = larguras[:len(df_top)]
+    # === Escala proporcional das barras ===
+    max_pct = df_top["Impacto_Pct"].max()
+
+    # controla o "zoom visual" da barra (ajuste fino)
+    ZOOM = 0.85   # experimente entre 0.8 e 0.9
+    MIN_LARGURA = 0.28   # ajuste fino: 0.10 ~ 0.14 costumam funcionar bem
+    
+    df_top["Largura"] = (
+        MIN_LARGURA
+        + (df_top["Impacto_Pct"] / max_pct) * (ZOOM - MIN_LARGURA)
+    )
 
     # === Caminho da imagem ===
     os.makedirs(pasta_saida, exist_ok=True)
@@ -191,7 +205,7 @@ def gerar_imagem_impacto(servico, info, pasta_saida, largura=1200, altura=600):
         barra_x = 0.20
         barra_y = y - barra_altura/2
         barra_total = 0.45
-        barra_w = barra_total * larguras[i]
+        barra_w = barra_total * row["Largura"]
 
         # Barra com gradiente REAL
         gradiente(ax, barra_x, barra_y, barra_w, barra_altura, cor_escura, cor_clara)

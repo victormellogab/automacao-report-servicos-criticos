@@ -14,22 +14,12 @@ MAPA_AGRUPAMENTO = {
     "ANÁLISE DE VIABILIDADE DE ABASTECIMENTO": "AVA/AVE",
     "ANÁLISE DE VIABILIDADE DE ESGOTAMENTO": "AVA/AVE",
 
-    "CONSERTO DE VAZAMENTO EM REDE ÁGUA": "CONSERTO DE VAZAMENTO",
-    "CONSERTO DE VAZAMENTO EM RAMAL ÁGUA": "CONSERTO DE VAZAMENTO",
-    "CONSERTO DE VAZAMENTO NO CAVALETE": "CONSERTO DE VAZAMENTO",
-
     "APA - AVALIAÇÃO DE POSSIBILIDADE DE ABASTECIMENTO": "APA/APE",
     "APE - AVALIAÇÃO DE POSSIBILIDADE DE ESGOTAMENTO": "APA/APE",
 
     "FISCALIZAÇÃO DE CORTE NA REDE COM SUPRESSÃO DE RAMAL": "FISCALIZAÇÃO DE CORTE",
     "FISCALIZAÇÃO DE CORTE NO RAMAL SEM SUPRESSÃO DE RAMAL": "FISCALIZAÇÃO DE CORTE",
     "FISCALIZAÇÃO DE CORTE HIDRÔMETRO": "FISCALIZAÇÃO DE CORTE",
-
-    "SUSPENSÃO DE FORNECIMENTO NO HD": "SUSPENSÃO",
-    "SUSPENSÃO DE FORNECIMENTO NO RAMAL": "SUSPENSÃO",
-
-    "RELIGAÇÃO NO HD": "RELIGAÇÃO",
-    "RELIGAÇÃO NO RAMAL": "RELIGAÇÃO",
 }
 
 
@@ -47,7 +37,7 @@ def extrair_top3_concessionarias_por_servico_tempo(df_mes, top10_df, n=3):
     df = _aplicar_mapa_no_df_servicos(df_mes)
     resultados = {}
 
-    for _, row in top10_df.head(3).iterrows():
+    for _, row in top10_df.head(4).iterrows():
         servico = row["Servico_Limpo"]
 
         df_serv = df[df["Servico_Agrupado"] == servico].copy()
@@ -102,7 +92,17 @@ def gerar_imagem_impacto_tempo(servico, info, pasta_saida, largura=1200, altura=
 
     df_top["Impacto_Pct"] = df_top["Impacto_Pct"].apply(lambda x: np.floor(float(x) * 100) / 100)
 
-    larguras = [1.0, 0.85, 0.70, 0.50][:len(df_top)]
+    # === Escala proporcional das barras ===
+    max_pct = df_top["Impacto_Pct"].max()
+
+    # controla o "zoom visual" da barra (ajuste fino)
+    ZOOM = 0.85   # experimente entre 0.8 e 0.9
+    MIN_LARGURA = 0.28   # ajuste fino: 0.10 ~ 0.14 costumam funcionar bem
+    
+    df_top["Largura"] = (
+        MIN_LARGURA
+        + (df_top["Impacto_Pct"] / max_pct) * (ZOOM - MIN_LARGURA)
+    )
 
     os.makedirs(pasta_saida, exist_ok=True)
     arquivo = f"{servico.replace('/', '_').replace(' ', '_')}_Impacto_Tempo.png"
@@ -156,7 +156,7 @@ def gerar_imagem_impacto_tempo(servico, info, pasta_saida, largura=1200, altura=
         barra_x = 0.20
         barra_y = y - barra_altura/2
         barra_total = 0.45
-        barra_w = barra_total * larguras[i]
+        barra_w = barra_total * row["Largura"]
 
         gradiente(ax, barra_x, barra_y, barra_w, barra_altura, cor_escura, cor_clara)
 
