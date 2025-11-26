@@ -135,23 +135,29 @@ def gerar_top10_com_top3_concessionarias(df, df_servicos):
 def aplicar_agrupamentos(resumo):
     # Mapeamento dos grupos desejados
     mapa = {
-        # Ligação Nova de Água
         "LIGAÇÃO NOVA DE ÁGUA C/ CAIXA PROTETORA PAREDE": "LIGAÇÃO NOVA DE ÁGUA",
         "LIGAÇÃO NOVA DE ÁGUA C/ CAIXA PROTETORA PISO": "LIGAÇÃO NOVA DE ÁGUA",
         "LIGAÇÃO NOVA DE ÁGUA C/ CAIXA PROTETORA TOTEM": "LIGAÇÃO NOVA DE ÁGUA",
 
-        # AVA / AVE
         "ANÁLISE DE VIABILIDADE DE ABASTECIMENTO": "AVA/AVE",
         "ANÁLISE DE VIABILIDADE DE ESGOTAMENTO": "AVA/AVE",
 
-        # Conserto de Vazamento
         "CONSERTO DE VAZAMENTO EM REDE ÁGUA": "CONSERTO DE VAZAMENTO",
         "CONSERTO DE VAZAMENTO EM RAMAL ÁGUA": "CONSERTO DE VAZAMENTO",
         "CONSERTO DE VAZAMENTO NO CAVALETE": "CONSERTO DE VAZAMENTO",
-        
-        # APA/APE
+
         "APA - AVALIAÇÃO DE POSSIBILIDADE DE ABASTECIMENTO": "APA/APE",
         "APE - AVALIAÇÃO DE POSSIBILIDADE DE ESGOTAMENTO": "APA/APE",
+
+        "FISCALIZAÇÃO DE CORTE NA REDE COM SUPRESSÃO DE RAMAL": "FISCALIZAÇÃO DE CORTE",
+        "FISCALIZAÇÃO DE CORTE NO RAMAL SEM SUPRESSÃO DE RAMAL": "FISCALIZAÇÃO DE CORTE",
+        "FISCALIZAÇÃO DE CORTE HIDRÔMETRO": "FISCALIZAÇÃO DE CORTE",
+
+        "SUSPENSÃO DE FORNECIMENTO NO HD": "SUSPENSÃO",
+        "SUSPENSÃO DE FORNECIMENTO NO RAMAL": "SUSPENSÃO",
+
+        "RELIGAÇÃO NO HD": "RELIGAÇÃO",
+        "RELIGAÇÃO NO RAMAL": "RELIGAÇÃO",
     }
 
     # Aplica substituição (serviços fora do mapa permanecem iguais)
