@@ -80,8 +80,6 @@ def gerar_grafico_concessionarias(df_filtrado, pasta_saida):
     pct_no = resumo["%_No_Prazo"]
     pct_fora = resumo["%_Fora_Prazo"]
 
-    # ============================
-    # AQUI É O SEGREDO 👇
     # aumenta o espaço entre grupos
     # ============================
     x = np.arange(0, len(empresas) * 1.4, 1.4)

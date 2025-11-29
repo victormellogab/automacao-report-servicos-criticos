@@ -20,7 +20,7 @@ def criar_status_prazo(df):
     # Criar StatusPrazo seguindo o SWITCH do DAX
     def status(row):
         if pd.isna(row['DATA_BAIXA']):
-            return "Em Andamento"
+            return "Sem Definição"
         elif row['DATA_BAIXA'] <= row['PrazoAjustado']:
             return "No Prazo"
         else:
@@ -49,12 +49,6 @@ def calcular_prazo_dax(row, prazo_dict, df_servicos):
             return None
 
 def gab_calcular_prazo_dax(row, df_os, df_servicos):
-    """
-    Replica exatamente o cálculo DAX consolidado:
-    - Quando não há EMPRESA selecionada (GAB),
-      o Power BI faz AVERAGE('TODOS_SERVICOS'[Prazo para Empresa])
-      considerando apenas o serviço atual.
-    """
     serv = row['Servico_Limpo']
 
     prazos = df_servicos.loc[

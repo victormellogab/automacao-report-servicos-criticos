@@ -2,7 +2,7 @@
 from config import PASTA_SAIDA
 from carregar_tratar_base import carregar_dados
 from filtros import filtrar_periodo, excluir_invalidos
-from medidas import calcular_dias_exec, criar_status_prazo, criar_prazo_dict, gab_calcular_prazo_dax
+from medidas import calcular_dias_exec, criar_status_prazo, gab_calcular_prazo_dax
 from top10 import gerar_top10
 from top3 import gerar_top3
 from grafico import gerar_grafico, gerar_grafico_concessionarias
@@ -17,7 +17,6 @@ def main():
     print("\n===== GERANDO CONSOLIDADO GAB =====")
 
     df, df_servicos = carregar_dados()
-    prazo_dict = criar_prazo_dict(df_servicos)
 
     # Cria subpasta GAB dentro da pasta de saída
     pasta_gab = os.path.join(PASTA_SAIDA, "GAB")
@@ -40,10 +39,6 @@ def main():
     # graficos detalhado por concessionaria no top 3 do top 10
     caminhos_imagens = gerar_imagens_top3_de_top10(df_mes, top10_normal, pasta_gab)
     print("Imagens de impacto geradas:", caminhos_imagens)
-
-    # ======== top10 detalhado ========
-    #df_top10 = gerar_top10_com_top3_concessionarias(df_mes, df_servicos)
-    #salvar_tabela_top10_expandido_img(df_top10, f"{pasta_gab}/GAB_Prazo_Top10_Detalhado")
 
     # ======== top3 ========
     df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-05-01'), pd.to_datetime('2025-10-31'))

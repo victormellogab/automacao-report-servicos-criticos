@@ -107,31 +107,6 @@ def gerar_top10_com_top3_concessionarias(df, df_servicos):
 
     return pd.DataFrame(linhas_final)
 
-'''def gerar_top10_grupo(df):
-    """
-    Gera Top 10 por Grupo de Serviço (GAB consolidado).
-    """
-
-    # Agrupamento por grupo
-    resumo = df.groupby('Grupo de Serviço').agg(
-        Qtde_OS=('Nº O.S.', 'count'),
-        Prazo_Padrao=('PrazoPadrao', 'mean'),
-        Media_Execucao=('DiasDeExec', 'mean'),
-        No_Prazo=('StatusPrazo', lambda x: (x == 'No Prazo').sum())
-    ).reset_index()
-
-    # Diferença
-    resumo['Diferença'] = resumo['Media_Execucao'] - resumo['Prazo_Padrao']
-
-    # % No Prazo
-    resumo['%_No_Prazo'] = round((resumo['No_Prazo'] / resumo['Qtde_OS']) * 100, 2)
-
-    # Ordenar piores grupos
-    top10 = resumo.sort_values('%_No_Prazo').head(10)
-
-    return top10[['Grupo de Serviço', 'Qtde_OS', 'Prazo_Padrao', 'Media_Execucao', 'Diferença', '%_No_Prazo']]
-'''
-
 def aplicar_agrupamentos(resumo):
     # Mapeamento dos grupos desejados
     mapa = {
@@ -179,27 +154,3 @@ def aplicar_agrupamentos(resumo):
     })
 
     return agrupado
-
-'''
-backup gerar top 10
-
-def gerar_top10(df):
-    # Agrupamento por serviço (nível agregado)
-    resumo = df.groupby('Servico_Limpo').agg(
-        Qtde_OS=('Nº O.S.', 'count'),
-        Prazo_Padrao=('PrazoPadrao', 'mean'),
-        Media_Execucao=('DiasDeExec', 'mean'),
-        No_Prazo=('StatusPrazo', lambda x: (x == 'No Prazo').sum())
-    ).reset_index()
-
-    # Diferença calculada após o agrupamento (igual ao BI)
-    resumo['Diferença'] = resumo['Media_Execucao'] - resumo['Prazo_Padrao']
-
-    # % Serviços no Prazo
-    resumo['%_No_Prazo'] = round((resumo['No_Prazo'] / resumo['Qtde_OS']) * 100, 2)
-
-    # Ordenar pelos piores desempenhos
-    top10 = resumo.sort_values('%_No_Prazo').head(10)
-
-    return top10[['Servico_Limpo', 'Qtde_OS', 'Prazo_Padrao', 'Media_Execucao', 'Diferença', '%_No_Prazo']]
-'''
