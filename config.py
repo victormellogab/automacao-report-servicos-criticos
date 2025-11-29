@@ -22,5 +22,5 @@ CONCESSIONARIAS = [
     'CAPAM',
     'CAPY',
     'CAV',
-    #'RIOMAIS'
+    'RIOMAIS'
 ]
