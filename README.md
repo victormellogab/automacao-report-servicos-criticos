@@ -1,22 +1,43 @@
-documentação rápida:
+# Documentação Rápida
 
-para funcionar a automação para as Concessionárias, a ordem para rodar será:
+## Automação para Concessionárias
 
-1º - exportar a base da data que quer do BI do Report
-2º - configurar o intervalo de datas e caminho do arquivo dessa base
-3º - rodar primeiro prazo/gerar_imagens (vai gerar o card, tabelas e gráfico da primeira página de prazo)
-4º - rodar depois tempo/gerar_imagens (vai gerar o card, tabelas e gráfico da segunda página de tempo)
-5º - só assim rodar ./main.py (o da raiz do projeto, que vai consolidar as imagens geradas e construir o report em .docx)
+Para que a automação funcione corretamente para as **Concessionárias**, a ordem de execução deve ser **exatamente** a seguinte:
+
+1. **Exportar a base** da data desejada a partir do BI (Report).
+2. **Configurar o intervalo de datas** e o **caminho do arquivo** dessa base exportada.
+3. **Executar**:
+   ```bash
+   prazo/gerar_imagens.py
+   ```
+>
+4. **Executar**:
+  ```bash
+  tempo/gerar_imagens.py
+  ```
+>
+5. **Executar**
+  ```bash
+  ./main.py
+  ```
+>
 
 
+## Automação para GAB
 
-para funcionar a automação para o GAB, a ordem para rodar será:
-1º - com as concessionárias já geradas e o período ajustado, rodar:
-1.1º - prazo/gab_gerar_imagens.py
-1.2º - tempo/gab_gerar_imagens.py
+PAra que a automação funcione corretamente para todas as **Concessionárias**, a ordem de execução deve ser **exatamente** a seguinte:
 
-obs: atualmente o código GAB não está finalizado para anexar as imagens nesse novo padrão no documento. então depois de rodar eles, será necessário anexar as imagens manualmente.
+1. **Exportar a base** da data desejada a partir do BI (Report). Vale lembrar que se fez o procedimento para rodar o das concessionárias de forma separada, a base ainda seria a mesma. Entao não precisa puxar de novo.
 
+2. **Configurar o inter alo de datas** e o **caminho do arquivo** dessa base exportada. Vale lembrar que se fez o procedimento para roda o das concessionária de forma separada, a base ainda seria a mesma. Então não precisa puxar de novo.
 
+3. **Executar**:
+> Com as concessionárias já geradas e o perído ajustado:
+  ```bash
+  	prazo/gab_gerar_imagens.py
+  ```
+  e
 
-ajustar: consolidar as informações mutáveis na raiz, para facilitar o ajuste.
+  ```bash
+  tempo/gab_gerar_imagens.py
+  ```
