@@ -41,10 +41,6 @@ def main():
     # === Gerar gráficos detalhados ===
     gerar_imagens_top3_tempo(df_mes, top10, pasta_gab)
 
-    # ======== TOP 10 Detalhado ========
-    #top10_expand = gerar_top10_com_top3_concessionarias_tempo(df_top10, df_servicos)
-    #salvar_tabela_top10_expandido_img_tempo(top10_expand, f"{pasta_gab}/GAB_Tempo_Top10_Detalhado")
-
     # ======== TOP 3 (últimos 6 meses) ========
     df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-05-01'), pd.to_datetime('2025-10-31'))
     df_3meses = excluir_invalidos(df_3meses)

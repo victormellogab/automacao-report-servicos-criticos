@@ -30,10 +30,6 @@ def salvar_tabela_top3_compacto_tempo(df, caminho_arquivo):
         else:
             cores_pct.append("#A6DFB4")  # verde claro
 
-    # ==========================================================
-    #  ALTURA AUTOMÁTICA (mesmo do prazo)
-    # ==========================================================
-
     altura_header = 40
     altura_base = 38
     chars_por_linha = 28
@@ -42,10 +38,6 @@ def salvar_tabela_top3_compacto_tempo(df, caminho_arquivo):
     altura_linha_final = altura_base * max(1, max_linhas)
 
     altura_total = altura_header + len(df2) * altura_linha_final + 20
-
-    # ==========================================================
-    #  TABELA (EXATAMENTE O MESMO LAYOUT DO PRAZO)
-    # ==========================================================
 
     fig = go.Figure(
         data=[

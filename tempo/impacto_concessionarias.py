@@ -174,8 +174,6 @@ def gerar_imagem_impacto_tempo(servico, info, pasta_saida, largura=1200, altura=
     plt.close()
     return caminho
 
-
-# ===========================================================
 #   Função principal (como no prazo)
 # ===========================================================
 def gerar_imagens_top3_tempo(df_mes, top10_df, pasta_saida):
