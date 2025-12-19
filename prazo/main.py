@@ -21,7 +21,7 @@ def main():
     print("\n===== Resumo Setembro 2025 =====")
 
     for conc in CONCESSIONARIAS:
-        df_mes = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-10-01'), pd.to_datetime('2025-10-31'))
+        df_mes = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-11-01'), pd.to_datetime('2025-11-30'))
         df_mes = df_mes[df_mes['EMPRESA'] == conc]
         df_mes = excluir_invalidos(df_mes)
         df_mes = calcular_dias_exec(df_mes, 'DATA_HORA_INCL', 'DATA_BAIXA')
@@ -34,7 +34,7 @@ def main():
 
     # Top 10 do mês
     for conc in CONCESSIONARIAS:
-        df_top10 = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-10-01'), pd.to_datetime('2025-10-31'))
+        df_top10 = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-11-01'), pd.to_datetime('2025-11-30'))
         df_top10 = excluir_invalidos(df_top10)
         df_top10 = calcular_dias_exec(df_top10, 'DATA_HORA_INCL', 'DATA_BAIXA')
         df_top10['PrazoPadrao'] = df_top10.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
@@ -45,7 +45,7 @@ def main():
 
     # Top 3 últimos 3 meses
     for conc in CONCESSIONARIAS:
-        df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-08-01'), pd.to_datetime('2025-10-31'))
+        df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-09-01'), pd.to_datetime('2025-11-30'))
         df_3meses = excluir_invalidos(df_3meses)
         df_3meses = calcular_dias_exec(df_3meses, 'DATA_HORA_INCL', 'DATA_BAIXA')
         df_3meses['PrazoPadrao'] = df_3meses.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
@@ -56,7 +56,7 @@ def main():
 
     # Gráfico últimos 6 meses
     for conc in CONCESSIONARIAS:
-        df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-05-01'), pd.to_datetime('2025-10-31'))
+        df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-06-01'), pd.to_datetime('2025-11-30'))
         df_graf = df_graf[df_graf['EMPRESA'] == conc]
         df_graf = excluir_invalidos(df_graf)
         df_graf = calcular_dias_exec(df_graf, 'DATA_HORA_INCL', 'DATA_BAIXA')
