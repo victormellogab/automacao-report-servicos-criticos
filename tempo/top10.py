@@ -1,5 +1,33 @@
 import pandas as pd
 
+def gerar_top10_concessionarias(df):
+    resumo = df.groupby('Servico_Limpo').agg(
+        Qtde_OS=('Nº O.S.', 'count'),
+        TempoPadrao=('TempoPadrao', 'mean'),
+        Media_Execucao=('TEMPO_EXEC_MIN', 'mean'),
+        No_Tempo=('StatusTempo', lambda x: (x == 'No Tempo').sum())
+    ).reset_index()
+
+    # ✅ FORÇAR TIPOS NUMÉRICOS
+    resumo['Qtde_OS'] = pd.to_numeric(resumo['Qtde_OS'], errors='coerce').fillna(0)
+    resumo['No_Tempo'] = pd.to_numeric(resumo['No_Tempo'], errors='coerce').fillna(0)
+
+    # Evita divisão por zero
+    resumo = resumo[resumo['Qtde_OS'] > 0]
+
+    resumo['Diferenca'] = resumo['Media_Execucao'] - resumo['TempoPadrao']
+
+    resumo['%_No_Tempo'] = (
+        resumo['No_Tempo'] / resumo['Qtde_OS'] * 100
+    ).round(2)
+
+    top10 = resumo.sort_values('%_No_Tempo').head(10)
+
+    return top10[
+        ['Servico_Limpo', 'Qtde_OS', 'TempoPadrao', 'Media_Execucao', 'Diferenca', '%_No_Tempo']
+    ]
+
+
 def gerar_top10(df):
     # Agrupamento por serviço (nível agregado)
     resumo = df.groupby('Servico_Limpo').agg(

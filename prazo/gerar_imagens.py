@@ -1,9 +1,9 @@
 from config import CONCESSIONARIAS, PASTA_SAIDA
 from carregar_tratar_base import carregar_dados
-from filtros import filtrar_periodo, excluir_invalidos
+from filtros import filtrar_periodo
 from medidas import calcular_dias_exec, criar_status_prazo, criar_prazo_dict, calcular_prazo_dax
-from top10 import gerar_top10
-from top3 import gerar_top3
+from top10 import gerar_top10_concessionarias
+from top3 import gerar_top3_concessionarias
 from grafico import gerar_grafico
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,9 +21,8 @@ def main():
     print("\n===== Resumo Mês =====")
 
     for conc in CONCESSIONARIAS:
-        df_mes = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-10-01'), pd.to_datetime('2025-10-31'))
+        df_mes = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-12-01'), pd.to_datetime('2025-12-31'))
         df_mes = df_mes[df_mes['EMPRESA'] == conc]
-        df_mes = excluir_invalidos(df_mes)
         df_mes = calcular_dias_exec(df_mes, 'DATA_HORA_INCL', 'DATA_BAIXA')
         df_mes['PrazoPadrao'] = df_mes.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
         df_mes = df_mes[df_mes['PrazoPadrao'].notna()]
@@ -34,31 +33,28 @@ def main():
 
     # Top 10 do mês
     for conc in CONCESSIONARIAS:
-        df_top10 = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-10-01'), pd.to_datetime('2025-10-31'))
-        df_top10 = excluir_invalidos(df_top10)
+        df_top10 = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-12-01'), pd.to_datetime('2025-12-31'))
         df_top10 = calcular_dias_exec(df_top10, 'DATA_HORA_INCL', 'DATA_BAIXA')
         df_top10['PrazoPadrao'] = df_top10.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
         df_top10 = df_top10[df_top10['PrazoPadrao'].notna()]
         df_top10 = criar_status_prazo(df_top10)
-        top10 = gerar_top10(df_top10[df_top10['EMPRESA'] == conc])
+        top10 = gerar_top10_concessionarias(df_top10[df_top10['EMPRESA'] == conc])
         salvar_tabela_img(top10, f"{PASTA_SAIDA}/{conc}_Prazo_Top10")
 
     # Top 3 últimos 3 meses
     for conc in CONCESSIONARIAS:
-        df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-08-01'), pd.to_datetime('2025-10-31'))
-        df_3meses = excluir_invalidos(df_3meses)
+        df_3meses = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-10-01'), pd.to_datetime('2025-12-31'))
         df_3meses = calcular_dias_exec(df_3meses, 'DATA_HORA_INCL', 'DATA_BAIXA')
         df_3meses['PrazoPadrao'] = df_3meses.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
         df_3meses = df_3meses[df_3meses['PrazoPadrao'].notna()]
         df_3meses = criar_status_prazo(df_3meses)
-        top3 = gerar_top3(df_3meses[df_3meses['EMPRESA'] == conc])
+        top3 = gerar_top3_concessionarias(df_3meses[df_3meses['EMPRESA'] == conc])
         salvar_tabela_img(top3, f"{PASTA_SAIDA}/{conc}_Prazo_Top3")
 
     # Gráfico últimos 6 meses
     for conc in CONCESSIONARIAS:
-        df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-05-01'), pd.to_datetime('2025-10-31'))
+        df_graf = filtrar_periodo(df, 'DATA_BAIXA', pd.to_datetime('2025-07-01'), pd.to_datetime('2025-12-31'))
         df_graf = df_graf[df_graf['EMPRESA'] == conc]
-        df_graf = excluir_invalidos(df_graf)
         df_graf = calcular_dias_exec(df_graf, 'DATA_HORA_INCL', 'DATA_BAIXA')
         df_graf['PrazoPadrao'] = df_graf.apply(lambda x: calcular_prazo_dax(x, prazo_dict, df_servicos), axis=1)
         df_graf = df_graf[df_graf['PrazoPadrao'].notna()]

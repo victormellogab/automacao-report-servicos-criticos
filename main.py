@@ -27,9 +27,10 @@ CONCESSIONARIA_NOME = {
     'CAPAM': 'Concessionária Águas de Pará de Minas',
     'CAPY': 'Concessionária Águas de Paraty',
     'CAV': 'Concessionária Águas de Votorantim',
+    'RIOMAIS': 'Rio+ Saneamento'
 }
 
-MES = "Outubro"
+MES = "Dezembro"
 ANO = 2025
 
 IMAGENS = {}
@@ -138,11 +139,13 @@ def gerar_documento_report(concessionaria, pasta_saida, imagens):
     doc.add_heading("REGRAS E PREMISSAS", level=1)
     doc.add_paragraph(
         "O que foi considerado:\n"
-        "• Exclusão da área de Engenharia\n"
+        "• Remoção da área de Engenharia (Somente na Aba de Tempo)\n"
         "• Considera o Dia do Prazo + 3 dias para os serviços do GSC que possuem apropriação manual\n"
-        "• Tempo de Execução: Diferença entre início e fim da execução do serviço\n"
-        "• Dias de Execução: Diferença entre Data Inclusão e Data Baixa do serviço\n"
-        "• Remoção de serviços executados sem tempo de início e fim de execução"
+        "• Tempo de Execução: Diferença entre Início e Fim da execução do serviço\n"
+        "• Dias de Execução: Diferença entre Data Inclusão e Data Hora Execução Fim\n"
+        "• Dias de Baixa: Diferença entre Data Inclusão e Data Baixa do serviço\n"
+        "• Dias Para Apropriação: Quantidade de dias que o serviço, após executado, demora para ser apropriado (baixado) no sistema\n"
+        "• São considerados serviços Fora do Prazo aqueles que a Data de Baixa é acima do Prazo da Empresa"
     )
 
     caminho_doc = os.path.join(pasta_saida, f"{concessionaria}_Report.docx")

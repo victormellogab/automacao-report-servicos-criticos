@@ -1,7 +1,7 @@
 import os
 
 # Caminhos dos arquivos
-CAMINHO_INOVA = r"C:\dados-report\base_report_novembro.xlsx"
+CAMINHO_INOVA = r"C:\dados-report\base_report_dezembro.xlsx"
 CAMINHO_SERVICOS = r"C:\dados-report\TODOS_SERVICOS.csv"
 
 # Pasta de saída

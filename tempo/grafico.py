@@ -5,59 +5,121 @@ import numpy as np
 def gerar_grafico(resumo_conc, pasta_saida, conc):
     meses = resumo_conc['Mes'].dt.month_name(locale='pt_BR')
     qtde_os = resumo_conc['Qtde_OS']
-    pct_no_tempo = resumo_conc['%_No_Tempo']  # ✅ Agora correto
+    pct_no_tempo = resumo_conc['%_No_Tempo']
+
+    # =========================
+    # LIMITES VISUAIS
+    # =========================
+    min_qtde = qtde_os.min()
+    max_qtde = qtde_os.max()
+
+    limite_inferior = min_qtde * 0.5
+    limite_superior = max_qtde * 1.05
+
+    pct_base = 30  # % mínima que começa no pé da barra (ajuste se quiser)
 
     fig, ax = plt.subplots(figsize=(10, 5))
+
+    # =====================
+    # FUNDO + SEM BORDA
+    # =====================
     fig.patch.set_facecolor('white')
+    fig.patch.set_edgecolor('white')
+    fig.patch.set_linewidth(0)
     ax.set_facecolor('white')
 
     # Remover bordas
     for spine in ax.spines.values():
         spine.set_visible(False)
 
-    # --- Barras ---
+    # =====================
+    # BARRAS – Qtde OS
+    # =====================
     bars = ax.bar(meses, qtde_os, color='#1f4e79', label='Qtde de OS')
     ax.set_yticks([])
+    ax.set_ylim(limite_inferior, limite_superior)
 
-    # --- Linha (convertendo % para altura relativa) ---
-    y_linha = qtde_os * (pct_no_tempo / 100)
-    ax.plot(meses, y_linha, marker='o', linewidth=2, color='#d97a00',
-            label='% Serviços No Tempo')
-
-    # --- Texto dentro das barras ---
+    # Texto dentro das barras
     for bar in bars:
         h = bar.get_height()
-        valor = f"{h:,.0f}".replace(",", ".") if h >= 1000 else str(int(h))
+        valor = f"{h:,.0f}".replace(",", ".")
+
+        y_texto = limite_inferior + (h - limite_inferior) * 0.05
+
         ax.text(
-            bar.get_x() + bar.get_width()/2,
-            h*0.05,
+            bar.get_x() + bar.get_width() / 2,
+            y_texto,
             valor,
-            ha='center', va='bottom',
-            fontsize=10, fontweight='bold',
-            color="white"
+            ha='center',
+            va='bottom',
+            fontsize=10,
+            fontweight='bold',
+            color='white'
         )
 
-    # --- Texto da linha (valores da % no tempo) ---
-    for i, (pct_real, y) in enumerate(zip(pct_no_tempo, y_linha)):
+    # =====================
+    # LINHA – % No Tempo (ANCORADA NA BARRA)
+    # =====================
+    y_linha = limite_inferior + (
+        (pct_no_tempo - pct_base) / (100 - pct_base)
+    ) * (limite_superior - limite_inferior)
+
+    ax.plot(
+        meses,
+        y_linha,
+        marker='o',
+        linewidth=2.5,
+        color='#d97a00',
+        label='% Serviços No Tempo'
+    )
+
+    # Labels da linha (%)
+    for i, pct in enumerate(pct_no_tempo):
         ax.text(
-            i, y + (qtde_os[i] * 0.05),
-            f'{pct_real}%',
-            ha='center', va='bottom',
-            fontsize=10, fontweight='bold',
+            i,
+            y_linha.iloc[i] + (limite_superior - limite_inferior) * 0.02,
+            f'{pct:.2f}%',
+            ha='center',
+            va='bottom',
+            fontsize=10,
+            fontweight='bold',
             color='#4a4a4a',
-            bbox=dict(boxstyle='round,pad=0.25', facecolor='white', edgecolor='none', alpha=0.9)
+            bbox=dict(
+                boxstyle='round,pad=0.25',
+                facecolor='white',
+                edgecolor='none',
+                alpha=0.9
+            )
         )
 
-    plt.subplots_adjust(bottom=0.22)
-
+    # =====================
+    # LEGENDA
+    # =====================
     handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles[::-1], labels[::-1], loc='upper center', bbox_to_anchor=(0.5, 1.07),
-            ncol=2, frameon=False)
+    fig.legend(
+        handles,
+        labels,
+        loc='upper center',
+        bbox_to_anchor=(0.5, 1.07),
+        ncol=2,
+        frameon=False
+    )
 
     fig.tight_layout()
 
-    caminho_grafico = os.path.join(pasta_saida, f'{conc}_Tempo_Grafico_6meses.png')
-    plt.savefig(caminho_grafico, dpi=300, bbox_inches='tight')
+    caminho_grafico = os.path.join(
+        pasta_saida,
+        f'{conc}_Tempo_Grafico_6meses.png'
+    )
+
+    plt.savefig(
+        caminho_grafico,
+        dpi=300,
+        bbox_inches='tight',
+        facecolor='white',
+        edgecolor='none'
+    )
+
     plt.close()
     return caminho_grafico
 
